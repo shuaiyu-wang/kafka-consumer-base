@@ -40,7 +40,7 @@ public class KafkaConsumer implements CommandLineRunner, DisposableBean {
     @Autowired
     private KafkaMsgHandlerDispatcher kafkaMsgHandlerDispatcher;
 
-    private void consume() throws Exception {
+    private void consume() {
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", kafkaConsumerConfig.getBroker());
         props.setProperty("group.id", kafkaConsumerConfig.getGroup());
@@ -76,9 +76,6 @@ public class KafkaConsumer implements CommandLineRunner, DisposableBean {
                 // 异步提交
                 consumer.commitAsync();
             }
-        } catch (Exception e) {
-            logger.error("消费数据出现异常");
-            throw e;
         } finally {
             try {
                 // 同步提交
@@ -98,7 +95,7 @@ public class KafkaConsumer implements CommandLineRunner, DisposableBean {
             try {
                 consume();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                logger.error("KAFKA消费线程出现未知异常，中断程序", e);
                 System.exit(1);
             }
         };
@@ -109,5 +106,6 @@ public class KafkaConsumer implements CommandLineRunner, DisposableBean {
     public void destroy() throws Exception {
         this.running= false;
         latch.await();
+        logger.info("KAFKA消费线程安全关闭");
     }
 }
